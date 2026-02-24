@@ -1,0 +1,51 @@
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+sourceSets {
+    studentTest {
+        java.srcDir file('src/studentTest/java')
+        resources.srcDir file('src/studentTest/resources')
+        // IMPORTANT: include main output so student tests can see TreeAnalyzer
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+
+configurations {
+    studentTestImplementation.extendsFrom testImplementation
+    studentTestRuntimeOnly.extendsFrom testRuntimeOnly
+}
+
+dependencies {
+    // Autograder lane (src/test/java)
+    testImplementation platform('org.junit:junit-bom:5.10.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+
+    // Student lane (src/studentTest/java)
+    studentTestImplementation platform('org.junit:junit-bom:5.10.2')
+    studentTestImplementation 'org.junit.jupiter:junit-jupiter'
+    studentTestRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+tasks.register('studentTest', Test) {
+    description = 'Runs student-authored tests (not graded).'
+    group = 'verification'
+    testClassesDirs = sourceSets.studentTest.output.classesDirs
+    classpath = sourceSets.studentTest.runtimeClasspath + configurations.studentTestRuntimeClasspath
+    useJUnitPlatform()
+}
